@@ -179,13 +179,65 @@ def phonebook():
     return render_template('phonebook.html.j2', default_data=fetch_default_data_for_templates(), exts=exts)
 
 
-@app.route('/myextensions/', methods=['GET'])
+@app.route('/myextensions/', methods=['GET', 'POST', 'DELETE'])
 @login_required
 def myextensions():
     exts = getUserExtensions(filterByUserId=current_user.id, searchFor=None, showPublicOnly=False)
 
-    return render_template('myextensions.html.j2', default_data=fetch_default_data_for_templates(), exts=exts)
+    if request.method == 'POST':
+        req_json = request.get_json()
+        ext = UserExtension()
 
+        ext.extension = html.escape(req_json['extension'])
+        ext.password = utilities.getRandomNumber(20)
+        ext.name = html.escape(req_json['name'])
+        ext.info = html.escape(req_json['info'])
+        ext.public = bool(req_json['public'])
+        ext.token = f'{token_prefix}{utilities.getRandomNumber(token_random_count)}'
+        ext.user_id = current_user.id
+
+        if len(ext.extension) == 4 and ext.extension.isdigit() and int(ext.extension[:1]) > 0:
+            try:
+                db.session.add(ext)
+                db.session.commit()
+
+                response = make_response(jsonify( {"message": "extension added"}), 200)
+            except:
+                response = make_response(jsonify( {"message": "extension can't be added. Do you need a voucher?"}), 400)
+
+
+        else:
+            response = make_response(jsonify( {"message": "you need 4 digits"}), 400)
+        return response
+
+    if request.method == 'DELETE':
+
+        req_json = request.get_json()
+        selection = db.select(UserExtension).filter_by(extension = req_json['extension'])
+        ext = db.session.execute(selection).first()
+
+        ext = ext[0]
+
+        if ext.user_id == current_user.id:
+            db.session.delete(ext)
+            db.session.commit()
+
+            response = make_response(jsonify( {"message": "extension deleted"}), 200)
+        else:
+            response = make_response(jsonify( {"message": "extension not owned by user"}), 403)
+        return response
+
+    if request.method == 'GET':
+        exts = getUserExtensions(filterByUserId=current_user.id,searchFor=None,showPublicOnly=False)
+
+        infobox_file = os.path.join(app.instance_path, "infobox.html")
+
+        infobox_content = None
+        if os.path.exists(infobox_file):
+            with open(infobox_file, "r", encoding="utf-8") as f:
+                infobox_content = f.read()
+
+        return render_template('myextensions.html.j2', default_data=fetch_default_data_for_templates(), exts=exts, infobox_content=infobox_content)
 
 ## API V1
 
