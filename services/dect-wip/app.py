@@ -160,7 +160,8 @@ def admin():
     cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
     
     if cu.is_admin: 
-        return "<p>Hello, Admin!</p>"
+        exts = getUserExtensions(filterByUserId=None,searchFor=None,showPublicOnly=False)
+        return render_template('admin.html.j2', default_data=fetch_default_data_for_templates(), exts=exts)
     else:
         return abort(403)
 
@@ -195,6 +196,7 @@ def myextensions():
         ext.public = bool(req_json['public'])
         ext.token = f'{token_prefix}{utilities.getRandomNumber(token_random_count)}'
         ext.user_id = current_user.id
+        ext.created_by = current_user.username
 
         if len(ext.extension) == 4 and ext.extension.isdigit() and int(ext.extension[:1]) > 0:
             try:
@@ -218,7 +220,7 @@ def myextensions():
 
         ext = ext[0]
 
-        if ext.user_id == current_user.id:
+        if current_user.is_admin or ext.user_id == current_user.id:
             db.session.delete(ext)
             db.session.commit()
 
