@@ -14,7 +14,6 @@
 </head>
 
 <body>
-
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"><i class="bi bi-reception-4 me-1"></i>EDA @ {{ default_data.event_name }}</a>
@@ -25,16 +24,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="/phonebook">Telefonbuch</a>
+                        <a class="nav-link {% if path == 'phonebook' %}active{% endif %}" href="/phonebook">Telefonbuch</a>
                     </li>
                     <!-- Login/Logout -->
                     {% if default_data.current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/myextensions">Meine Rufnummern</a>
+                        <a class="nav-link {% if path == 'myextensions' %}active{% endif %}" href="/myextensions">Meine Rufnummern</a>
                     </li>
                     {% if default_data.current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/">Admin</a>
+                        <a class="nav-link {% if path == 'admin' %}active{% endif %}" href="/admin/">Admin</a>
                     </li>
                     {% endif %}
                     <li class="nav-item">
