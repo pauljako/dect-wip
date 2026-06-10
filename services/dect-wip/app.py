@@ -54,7 +54,9 @@ def getUserExtensions(filterByUserId: User.id | None, searchFor: str | None, sho
 
     return db.session.execute(query).scalars().all()
 
-
+def getUsers() -> list:
+    users = db.session.execute(db.select(User)).scalars().all()
+    return users
 
 ## Routes
 
@@ -153,11 +155,45 @@ def admin():
     cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
     
     if cu.is_admin: 
-        exts = getUserExtensions(filterByUserId=None,searchFor=None,showPublicOnly=False)
-        return render_template('admin.html.j2', default_data=fetch_default_data_for_templates(), exts=exts)
+        return redirect("/admin/phonebook", code=302)
     else:
         return abort(403)
 
+@app.route('/admin/phonebook', methods=['GET'])
+@login_required
+def admin_phonebook():
+    cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
+    
+    if cu.is_admin: 
+        exts = getUserExtensions(filterByUserId=None,searchFor=None,showPublicOnly=False)
+        return render_template('admin.phonebook.html.j2', default_data=fetch_default_data_for_templates(), exts=exts)
+    else:
+        return abort(403)
+
+@app.route('/admin/users', methods=['GET', 'DELETE'])
+@login_required
+def admin_users():
+    cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
+    
+    if cu.is_admin: 
+        if request.method == 'DELETE':
+            req_json = request.get_json()
+            selection = db.select(User).filter_by(id = req_json['id'])
+            user = db.session.execute(selection).first()
+
+            user = user[0]
+
+            db.session.delete(user)
+            db.session.commit()
+
+            response = make_response(jsonify( {"message": "extension deleted"}), 200)
+            return response
+        else:
+            users = getUsers()
+            print(users)
+            return render_template('admin.users.html.j2', default_data=fetch_default_data_for_templates(), users=users)
+    else:
+        return abort(403)
 
 @app.route('/logout/', methods=['GET'])
 def logout():

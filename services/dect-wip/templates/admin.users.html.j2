@@ -1,13 +1,13 @@
-{% set path = 'admin' %}
+{% set admin_path = 'users' %}
 
-{% extends 'base.html.j2' %}
+{% extends 'admin.base.html.j2' %}
 
-{% block content %}
+{% block admincontent %}
 
 <!-- Überschrift -->
 
     <div class="container-xl mt-3 mb-3">
-        <p class="h3">gesamtes {{ default_data.event_name }}-Telefonbuch:</p>
+        <p class="h3">Benutzer:</p>
     </div>
 
     <!-- Suchfeld -->
@@ -15,7 +15,7 @@
     <div class="container-xl mb-3">
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input type="search" class="form-control" id="searchExtName" placeholder="Suche nach Rufnummer oder Name"
+            <input type="search" class="form-control" id="searchExtName" placeholder="Suche nach Name"
                 onkeyup="searchExtName()">
         </div>
     </div>
@@ -23,28 +23,24 @@
     <!-- Tabelle -->
 
     <div class="container-xl">
-        <table class="table table-striped" id="phonebook">
+        <table class="table table-striped" id="userlist">
             <thead>
                 <tr class="table-primary">
-                    <th scope="col" class="col-2">Rufnummer</th>
+                    <th scope="col" class="col-1">ID</th>
                     <th scope="col" class="col-2">Name</th>
-                    <th scope="col" class="col-2">Info</th>
-                    <th scope="col">Erstellt von</th>
-                    <th scope="col">Öffentlich Sichtbar?</th>
-                    <th scope="col">Aktionen</th>
+                    <th scope="col" class="col-1">Admin?</th>
+                    <th scope="col" class="col-1">Aktionen</th>
                 </tr>
             </thead>
             <tbody>
 
-            {% for ext in exts %}
+            {% for user in users %}
                 <tr>
-                    <td>{{ext.extension}}</td>
-                    <td>{{ext.name}}</td>
-                    <td>{{ext.info}}</td>
-                    <td>{{ext.created_by}}</td>
-                    <td>{{ext.public}}</td>
+                    <td>{{user.id}}</td>
+                    <td>{{user.username}}</td>
+                    <td>{% if user.is_admin %}Ja{% else %}Nein{% endif %}</td>
                     <td>
-                        <button type="submit" class="btn btn-danger" onclick="delEntry('{{ext.extension}}')">
+                        <button title="Löschen" type="submit" class="btn btn-danger" {% if default_data.current_user.id != user.id %}onclick="delEntry('{{user.id}}')"{% else %}disabled{% endif %}>
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
@@ -55,15 +51,15 @@
         </table>
     </div>
 
-    <!-- Deleting Number -->
+    <!-- Deleting User -->
     <script>
-    async function delEntry(extension) {
+    async function delEntry(id) {
 
         var entry = {
-            extension: extension,
+            id: id,
         };
 
-        fetch(`${window.origin}/myextensions/`, {
+        fetch(`${window.origin}/admin/users`, {
             method: "DELETE",
             credentials: "include",
             body: JSON.stringify(entry),
@@ -84,16 +80,15 @@
     <script>
         function searchExtName() {
             var filter = document.getElementById("searchExtName").value;
-            var lines = document.getElementById("phonebook").getElementsByTagName("tr");
+            var lines = document.getElementById("userlist").getElementsByTagName("tr");
 
             //for every entry except title bar, get extension and name
             for (i = 1; i < lines.length; i++) {
 
-                var extension = lines[i].getElementsByTagName("td")[0].textContent;
                 var name = lines[i].getElementsByTagName("td")[1].textContent;
 
                 filter = filter.toUpperCase()
-                if ( extension.toUpperCase().includes(filter) || name.toUpperCase().includes(filter) ) {
+                if (name.toUpperCase().includes(filter)) {
                     lines[i].style.display = "";
                 } else {
                     lines[i].style.display = "none";
