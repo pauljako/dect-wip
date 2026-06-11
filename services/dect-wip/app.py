@@ -177,7 +177,7 @@ def admin_phonebook():
     else:
         return abort(403)
 
-@app.route('/admin/users', methods=['GET', 'DELETE'])
+@app.route('/admin/users', methods=['GET', 'DELETE', 'POST'])
 @login_required
 def admin_users():
     cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
@@ -191,10 +191,28 @@ def admin_users():
             user = user[0]
 
             db.session.delete(user)
-            db.session.commit()
+            try:
+                db.session.commit()
 
-            response = make_response(jsonify( {"message": "extension deleted"}), 200)
-            return response
+                response = make_response(jsonify( {"message": "user deleted"}), 200)
+                return response
+            except:
+                response = make_response(jsonify( {"message": "user could be deleted. do they still have extensions?"}), 400)
+                return response
+        if request.method == 'POST':
+            req_json = request.get_json()
+            action = req_json['action']
+            if action == "impersonate":
+                selection = db.select(User).filter_by(id = req_json['id'])
+                user = db.session.execute(selection).scalar_one_or_none()
+
+                login_user(user, remember=True, duration=timedelta(days=1))
+                return redirect("/myextensions/", code=302)
+            elif action == "set_admin":
+                db.session.execute(db.update(User).filter_by(id = req_json['id']).values(is_admin=req_json['value']))
+                db.session.commit()
+                response = make_response(jsonify( {"message": "user admin changed"}), 200)
+                return response
         else:
             users = getUsers()
             print(users)
@@ -232,7 +250,6 @@ def myextensions():
         ext.public = bool(req_json['public'])
         ext.token = f'{token_prefix}{utilities.getRandomNumber(token_random_count)}'
         ext.user_id = current_user.id
-        ext.created_by = current_user.username
 
         if len(ext.extension) == 4 and ext.extension.isdigit() and int(ext.extension[:1]) > 0:
             try:
