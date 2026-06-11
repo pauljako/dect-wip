@@ -13,7 +13,6 @@ class UserExtension(db.Model):
     token: str = db.Column(db.String(20))
     public: bool = db.Column(db.Boolean, default=False, nullable=False)
     voucher: str = db.Column(db.String(32))
-    created_by: str = db.Column(db.String(32), nullable=False) # There is probably a better way but i hate sql
 
     # Foreign key linking to the User model's primary key (id)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

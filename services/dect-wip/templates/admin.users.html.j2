@@ -40,6 +40,18 @@
                     <td>{{user.username}}</td>
                     <td>{% if user.is_admin %}Ja{% else %}Nein{% endif %}</td>
                     <td>
+                        <button title="Als dieser Benutzer anmelden" type="submit" class="btn btn-secondary" {% if default_data.current_user.id != user.id %}onclick="loginAs('{{user.id}}')"{% else %}disabled{% endif %}>
+                            <i class="bi bi-person-up"></i>
+                        </button>
+                        {% if user.is_admin %}
+                        <button title="Administratorrechte entfernen" type="submit" class="btn btn-warning" {% if default_data.current_user.id != user.id %}onclick="setAdmin('{{user.id}}', 0)"{% else %}disabled{% endif %}>
+                            <i class="bi bi-person-lock"></i>
+                        </button>
+                        {% else %}
+                        <button title="Administratorrechte hinzufügen" type="submit" class="btn btn-warning" {% if default_data.current_user.id != user.id %}onclick="setAdmin('{{user.id}}', 1)"{% else %}disabled{% endif %}>
+                            <i class="bi bi-person-lock"></i>
+                        </button>
+                        {% endif %}
                         <button title="Löschen" type="submit" class="btn btn-danger" {% if default_data.current_user.id != user.id %}onclick="delEntry('{{user.id}}')"{% else %}disabled{% endif %}>
                             <i class="bi bi-trash"></i>
                         </button>
@@ -51,7 +63,7 @@
         </table>
     </div>
 
-    <!-- Deleting User -->
+    <!-- User actions -->
     <script>
     async function delEntry(id) {
 
@@ -61,6 +73,55 @@
 
         fetch(`${window.origin}/admin/users`, {
             method: "DELETE",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then((e) => {
+            if (e.status == 200) {
+                window.location.reload();
+            } else {
+                e.text().then((text) => {
+                    alert(text);
+                });
+            }
+        })
+    }
+
+    async function loginAs(id) {
+        
+        var entry = {
+            id: id,
+            action: "impersonate",
+        };
+
+        fetch(`${window.origin}/admin/users`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(() => {
+            window.location.assign("/myextensions");
+        })
+    }
+    
+    async function setAdmin(id, value) {
+        
+        var entry = {
+            id: id,
+            value: value,
+            action: "set_admin",
+        };
+
+        fetch(`${window.origin}/admin/users`, {
+            method: "POST",
             credentials: "include",
             body: JSON.stringify(entry),
             cache: "no-cache",
