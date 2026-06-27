@@ -1,0 +1,112 @@
+{% set admin_path = 'reservedextensions' %}
+
+{% extends 'admin.base.html.j2' %}
+
+{% block admincontent %}
+
+<!-- Überschrift -->
+
+    <div class="container-xl mt-3 mb-3">
+        <p class="h3">Reservierte Rufnummer-Bereiche:</p>
+    </div>
+
+    <!-- Tabelle -->
+
+    <div class="container-xl">
+        <table class="table table-striped" id="phonebook">
+            <thead>
+                <tr class="table-primary">
+                    <th scope="col" class="col-1">Start</th>
+                    <th scope="col" class="col-1">Ende</th>
+                    <th scope="col" class="col-1">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            {% for ext in exts %}
+                <tr>
+                    <td>{{ext.start}}</td>
+                    <td>{{ext.end}}</td>
+                    <td>
+                        <button title="Löschen" type="submit" class="btn btn-danger" onclick="delEntry('{{ext.start}}', '{{ext.end}}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Neue Rufnummer-Range -->
+    
+    <div class="container-xl mt-3 mb-3">
+        <p class="h5">Neuen Rufnummer-Bereich reservieren</p>
+    </div>
+    <div class="container-xl">
+        <div class="row align-items-start">
+            <div class="input-group mt-2">
+                <label for="extension_start" class="input-group-text"><i class="bi bi-telephone"></i></label>
+                <input type="tel" name="extension_start" class="form-control" id="extension_start" placeholder="Start Reservierter Bereich">
+            </div>
+            <div class="input-group mt-2">
+                <label for="extension_end" class="input-group-text"><i class="bi bi-telephone"></i></label>
+                <input type="tel" name="extension_end" class="form-control" id="extension_end" placeholder="Ende Reservierter Bereich">
+            </div>
+            <div class="mt-2">
+                <button type="submit" class="btn btn-success" onclick="addEntry()">
+                    <i class="bi bi-caret-right-fill me-2"></i>Bereich reservieren</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Adding Range -->
+    <script>
+    async function addEntry() {
+
+        var entry = {
+            start: document.getElementById("extension_start").value,
+            end: document.getElementById("extension_end").value
+        };
+
+        fetch(`${window.origin}/admin/reservedextensions`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(() => {
+            window.location.reload();
+        })
+    }
+    </script>
+
+    <!-- Deleting Range -->
+    <script>
+    async function delEntry(start, end) {
+
+        var entry = {
+            start: start,
+            end: end
+        };
+
+        fetch(`${window.origin}/admin/reservedextensions`, {
+            method: "DELETE",
+            credentials: "include",
+            body: JSON.stringify(entry),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(() => {
+            window.location.reload();
+        })
+    }
+    </script>
+
+{% endblock %}

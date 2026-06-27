@@ -15,6 +15,7 @@ from database import db # database object
 from database import UserExtension,TempExtension,User # database models
 from tools.confighelper import DectWIPConfig
 
+from database import UserExtension,TempExtension,User,ReservedExtensions # database models
 scheduler = APScheduler()
 login_manager = LoginManager()
 
@@ -177,6 +178,46 @@ def admin_phonebook():
     else:
         return abort(403)
 
+@app.route('/admin/reservedextensions', methods=['GET', 'DELETE', 'POST'])
+@login_required
+def admin_reservedextensions():
+    cu = db.session.execute(db.select(User).where(User.id==current_user.id)).scalar_one()
+    
+    if cu.is_admin:
+        if request.method == 'DELETE':
+            req_json = request.get_json()
+            selection = db.select(ReservedExtensions).filter_by(start = req_json['start'], end = req_json['end'])
+            extension = db.session.execute(selection).first()
+
+            extension = extension[0]
+            
+            db.session.delete(extension)
+            try:
+                db.session.commit()
+
+                response = make_response(jsonify( {"message": "range deleted"}), 200)
+                return response
+            except:
+                response = make_response(jsonify( {"message": "range could be deleted"}), 400)
+                return response
+        elif request.method == 'POST':
+            req_json = request.get_json()
+            extension = ReservedExtensions(start = req_json['start'], end = req_json['end'])
+            
+            db.session.add(extension)
+            try:
+                db.session.commit()
+
+                response = make_response(jsonify( {"message": "range added"}), 200)
+                return response
+            except:
+                response = make_response(jsonify( {"message": "range could be added"}), 400)
+                return response
+        else:
+            return render_template('admin.reservedextensions.html.j2', default_data=fetch_default_data_for_templates(), exts=db.session.execute(db.select(ReservedExtensions)).scalars().all())
+    else:
+        return abort(403)
+
 @app.route('/admin/users', methods=['GET', 'DELETE', 'POST'])
 @login_required
 def admin_users():
@@ -253,10 +294,15 @@ def myextensions():
 
         if len(ext.extension) == 4 and ext.extension.isdigit() and int(ext.extension[:1]) > 0:
             try:
-                db.session.add(ext)
-                db.session.commit()
 
-                response = make_response(jsonify( {"message": "extension added"}), 200)
+                query = db.select(ReservedExtensions).filter(ReservedExtensions.start <= str(ext.extension)).filter(ReservedExtensions.end >= str(ext.extension))
+                if len(db.session.execute(query).scalars().all()) != 0:
+                    response = make_response(jsonify( {"message": "extension is in reserved range"}), 400)
+                else:
+                    db.session.add(ext)
+                    db.session.commit()
+
+                    response = make_response(jsonify( {"message": "extension added"}), 200)
             except:
                 response = make_response(jsonify( {"message": "extension can't be added. Do you need a voucher?"}), 400)
 
