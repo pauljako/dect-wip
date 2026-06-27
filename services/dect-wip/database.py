@@ -5,6 +5,11 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 @dataclass
+class ReservedExtensions(db.Model):
+    start = db.Column(db.Integer, primary_key = True)
+    end = db.Column(db.Integer)
+
+@dataclass
 class UserExtension(db.Model):
     extension: str = db.Column(db.String(20), primary_key=True)
     password: str = db.Column(db.String(20))
