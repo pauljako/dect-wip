@@ -21,7 +21,7 @@ class DectWIPConfig():
             secret_file = os.environ[f'FROM_FILE_{env_var}']
             print(f'reading variable content from file: {secret_file}')
             with open(secret_file, 'r') as secret_file_handle:
-                return secret_file_handle.read()
+                return secret_file_handle.read().strip()
 
         if env_var in os.environ:
             print(f'USING OVERRIDE FROM ENV: {env_var}')
