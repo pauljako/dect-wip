@@ -41,18 +41,18 @@
                     <td>{% if user.is_admin %}Ja{% else %}Nein{% endif %}</td>
                     <td>
                         <button title="Als dieser Benutzer anmelden" type="submit" class="btn btn-secondary" {% if default_data.current_user.id != user.id %}onclick="loginAs('{{user.id}}')"{% else %}disabled{% endif %}>
-                            <i class="bi bi-person-up"></i>
+                            <i class="bi bi-box-arrow-in-right"></i>
                         </button>
                         <button title="Passwort zurücksetzen" type="submit" class="btn btn-primary" {% if default_data.current_user.id != user.id %}onclick="window.pwid = '{{user.id}}'; new bootstrap.Modal(document.getElementById('passwordResetModal')).show()"{% else %}disabled{% endif %}>
                             <i class="bi bi-key"></i>
                         </button>
                         {% if user.is_admin %}
                         <button title="Administratorrechte entfernen" type="submit" class="btn btn-warning" {% if default_data.current_user.id != user.id %}onclick="setAdmin('{{user.id}}', 0)"{% else %}disabled{% endif %}>
-                            <i class="bi bi-person-lock"></i>
+                            <i class="bi bi-shield-minus"></i>
                         </button>
                         {% else %}
                         <button title="Administratorrechte hinzufügen" type="submit" class="btn btn-warning" {% if default_data.current_user.id != user.id %}onclick="setAdmin('{{user.id}}', 1)"{% else %}disabled{% endif %}>
-                            <i class="bi bi-person-lock"></i>
+                            <i class="bi bi-shield-plus"></i>
                         </button>
                         {% endif %}
                         <button title="Löschen" type="submit" class="btn btn-danger" {% if default_data.current_user.id != user.id %}onclick="delEntry('{{user.id}}')"{% else %}disabled{% endif %}>
